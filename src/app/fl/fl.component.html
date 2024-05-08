@@ -34,7 +34,7 @@
 
         <div class="col">
             <button *ngIf="!isRunning && flData.length > 0" (click)="exportToExcel()" class="btn btn-primary mb-2">Выгрузить в Excel</button>
-            <table class="table table-bordered" *ngIf="flData.length > 0">
+            <table class="table table-bordered">
                 <thead>
                     <tr>
                         <th>ИНН</th>
@@ -48,6 +48,11 @@
                         <td>{{ fl.result }}</td>
                         <td>
                             <span class="spinner-border spinner-border-sm" *ngIf="fl.isRun"></span>
+                            <div *ngIf="!fl.isRun && fl.data != null">                                
+                                <div>
+                                    Найдено чеков НП: {{ fl.data?.receipts && fl.data?.receipts.length > 0 ? fl.data?.receipts.length : 'отсутствуют' }}
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

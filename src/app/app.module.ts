@@ -9,22 +9,24 @@ import { HomeComponent } from './home/home.component';
 import { ProfileComponent } from './profile/profile.component';
 import { httpInterceptorProviders } from './_helpers/http.interceptor';
 import { FlComponent } from './fl/fl.component';
+import { NotifierModule } from 'angular-notifier';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,    
-    HomeComponent,
-    ProfileComponent,
-    FlComponent,   
-  ],
-  imports: [
-    BrowserModule,    
-    FormsModule,
-    HttpClientModule,
-    AppRoutingModule,
-  ],
-  providers: [httpInterceptorProviders],
-  bootstrap: [AppComponent]
+    declarations: [
+        AppComponent,
+        LoginComponent,
+        HomeComponent,
+        ProfileComponent,
+        FlComponent,
+    ],
+    imports: [
+        BrowserModule,
+        FormsModule,
+        HttpClientModule,
+        AppRoutingModule,
+        NotifierModule.withConfig({ position: { horizontal: { position: 'right' } }}),
+    ],
+    providers: [httpInterceptorProviders],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }

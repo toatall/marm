@@ -6,10 +6,10 @@
             </a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
+                    <li class="nav-item" *ngIf="isLoggedIn">
                         <a class="nav-link" routerLink="home" routerLinkActive="active">Главная</a>
                     </li>          
-                    <li class="nav-item">
+                    <li class="nav-item" *ngIf="isLoggedIn">
                         <a class="nav-link" routerLink="fl" routerLinkActive="active">По самозанятым</a>
                     </li>
                 </ul>
@@ -32,4 +32,5 @@
     <div class="container pt-5">
         <router-outlet></router-outlet>
     </div>
+    <notifier-container></notifier-container>
 </div>

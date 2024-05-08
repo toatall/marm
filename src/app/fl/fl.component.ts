@@ -54,7 +54,7 @@ export class FlComponent {
         }
         
         // поиск самозанятого
-        this.taxpayerService.getTaxpayers(inn)
+        this.taxpayerService.getTaxpayers(inn)            
             .subscribe((taxpayer: Taxpayer) => {
                         
                 let taxpayerData = new TaxpayerData()
@@ -101,15 +101,14 @@ export class FlComponent {
                     this.start()
                 })
 
-            }/*, (error) => {
-                console.log(error)
-            }*/)                   
+            }, () => {
+                this.start()
+            })                               
         
     }
 
     private stop() {
-        this.isRunning = false        
-        console.log(this.flData)
+        this.isRunning = false                
     }
 
     public exportToExcel() {        
@@ -145,9 +144,8 @@ export class FlComponent {
                     "ЕСХН": item.data.eshnStatusExists ? "Да" : "Нет", 
                     "Срок снятия с СНР": item.data.deadLine,
                 }
-
-                if (Array.isArray(item.regLogs) && item.regLogs.length > 0) {
-                    const regLog = item.regLogs.shift()
+                if (Array.isArray(item.data.regLogs) && item.data.regLogs.length > 0) {                    
+                    const regLog = item.data.regLogs.shift()
                     main['Устройство'] = regLog.deviceId
                     main['IP-адрес регистрации'] = regLog.ipAddress
                     main['Массовая постановка'] = regLog.isMassReg ? 'Да' : 'Нет'
@@ -173,7 +171,7 @@ export class FlComponent {
                             "Название ИП/ЮЛ клиента": receipt.clientDisplayName,
                             "Партнер, зарегистрировавший чек": receipt.partnerName,
                             "Код партнера": receipt.partnerCode,
-                            "Время отмены": receipt.cancellationTime,
+                            "Время отмены":  new Date(receipt.cancellationTime),
                             "Причина отмены": receipt.cancellationComment,
                             "Код устройства, с которого был отменен чек": receipt.cancellationSourceDeviceId,
                             "Код устройства, с которого был зарегистрирован чек": receipt.sourceDeviceId,

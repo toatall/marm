@@ -1,8 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService } from '../_services/user.service';
-import { StorageService } from '../_services/storage.service';
-import { catchError } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+
 
 @Component({
     selector: 'app-home',
@@ -15,7 +12,7 @@ export class HomeComponent implements OnInit {
     // isRunning: boolean = false
     // innCount: Number = 0
 
-    constructor(private userService: UserService, private storageService: StorageService) { }
+    constructor() { }
 
     ngOnInit(): void {
 
