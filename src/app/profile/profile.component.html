@@ -1,0 +1,13 @@
+<div class="container" *ngIf="currentUser; else loggedOut">
+    
+    <header class="jumbotron">
+        <h3>
+            Учетная запись: <strong>{{ currentUser.username }}</strong>
+        </h3>    
+    </header>   
+
+</div>
+
+<ng-template #loggedOut>
+    Выполните вход
+</ng-template>

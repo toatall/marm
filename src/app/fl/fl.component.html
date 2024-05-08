@@ -1,0 +1,58 @@
+<div class="container">
+
+    <nav aria-label="breadcrumb" class="w-100 pt-3 px-4 mb-4 bg-light border rounded fw-bold">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a routerLink="/home">Главная</a>
+            </li>
+            <li class="breadcrumb-item">
+                По самозанятым
+            </li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        
+        <div class="col-2">
+            <form (ngSubmit)="onSubmit()" #f="ngForm" novalidate>
+                <div class="card">
+                    <div class="card-header">
+                        Список ИНН
+                    </div>
+                    <div class="card-body">
+                        <textarea id="inn" class="form-control" name="inn" rows="15" [(ngModel)]="inn" required></textarea>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-success btn-block mt-2" type="submit" [disabled]="isRunning">                    
+                            <span class="spinner-border spinner-border-sm" *ngIf="isRunning"></span>
+                            Запуск
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col">
+            <button *ngIf="!isRunning && flData.length > 0" (click)="exportToExcel()" class="btn btn-primary mb-2">Выгрузить в Excel</button>
+            <table class="table table-bordered" *ngIf="flData.length > 0">
+                <thead>
+                    <tr>
+                        <th>ИНН</th>
+                        <th>ФИО</th>                        
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>                    
+                    <tr *ngFor="let fl of flData">
+                        <td>{{ fl.inn }}</td>                        
+                        <td>{{ fl.result }}</td>
+                        <td>
+                            <span class="spinner-border spinner-border-sm" *ngIf="fl.isRun"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
