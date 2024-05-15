@@ -13,27 +13,35 @@
 
     <div class="row">
         
-        <div class="col-2">
-            <form (ngSubmit)="onSubmit()" #f="ngForm" novalidate>
+        <div class="col-3">
+            <form (ngSubmit)="onSubmit()">
                 <div class="card">
                     <div class="card-header">
-                        Список ИНН
+                        <h4>Список ИНН</h4>
+                        <span class="text-secondary">(каждый ИНН должен быть с новой строки)</span>
                     </div>
                     <div class="card-body">
-                        <textarea id="inn" class="form-control" name="inn" rows="15" [(ngModel)]="inn" required></textarea>
+                        <textarea id="inn" class="form-control" name="inn" rows="15" [(ngModel)]="innTextarea"></textarea>
                     </div>
                     <div class="card-footer">
-                        <button class="btn btn-success btn-block mt-2" type="submit" [disabled]="isRunning">                    
-                            <span class="spinner-border spinner-border-sm" *ngIf="isRunning"></span>
-                            Запуск
-                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-success" type="submit" [disabled]="isRunning">
+                                <span class="spinner-border spinner-border-sm" *ngIf="isRunning"></span>
+                                Запуск
+                            </button>                        
+                            <button (click)="cancel()" *ngIf="isRunning" class="btn btn-danger">Остановить</button>
+                        </div>
                     </div>
                 </div>
             </form>
         </div>
 
         <div class="col">
-            <button *ngIf="!isRunning && flData.length > 0" (click)="exportToExcel()" class="btn btn-primary mb-2">Выгрузить в Excel</button>
+            <button *ngIf="!isRunning && flData.length > 0" [disabled]="isExporting" (click)="exportToExcel()" class="btn btn-primary mb-2">
+                <span class="spinner-border spinner-border-sm" *ngIf="isExporting"></span>
+                Выгрузить в Excel
+            </button>
+            
             <table class="table table-bordered">
                 <thead>
                     <tr>

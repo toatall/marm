@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { TaxpayerService } from '../_services/taxpayer.service';
 import { Queues } from '../_helpers/queues';
-import { Taxpayer } from '../models/taxpayer';
 import { TaxpayerData } from '../models/taxpayerData';
-import { ExcelService } from '../_services/excel.service';
+import { ExcelService, ExcelSheet } from '../_services/excel.service';
+import { NotifierService } from 'angular-notifier'
+import { Taxpayer } from '../models/taxPayer';
+import * as XLSX from 'xlsx-js-style';
 
 @Component({
     selector: 'app-fl',
@@ -12,9 +14,12 @@ import { ExcelService } from '../_services/excel.service';
 })
 export class FlComponent {
 
-    inn: string = '';    
-    listInn?: string[]
-    isRunning: boolean = false
+
+    public innTextarea: string    
+    public listInn: string[]
+    public isRunning: boolean = false
+    public isCancel: boolean = false
+    public isExporting: boolean = false
     
     // очередь заданий
     private queues: Queues = new Queues()
@@ -24,31 +29,48 @@ export class FlComponent {
 
 
     /**
-     * @param taxpayerService 
+     * {@inheritdoc}
      */
-    public constructor (private taxpayerService: TaxpayerService, private excelService: ExcelService) {}
+    public constructor (
+        private taxpayerService: TaxpayerService, 
+        private excelService: ExcelService,
+        private notifierService: NotifierService,
+    ) {}    
+  
 
     /**
      * Запуск поиска
      */
     public onSubmit() {
-        const listInn = this.inn?.split("\n")       
-        if (!Array.isArray(listInn) || listInn.length == 0) {
-            console.log('НЕ ЗАПОЛНЕНО ПОЛЕ!');
+        
+        if (!this.innTextarea || this.innTextarea.trim() == '') {
+            this.notifierService.notify('warning', 'Не заполнен список ИНН')   
+            return
         }
+
+        const listInn = this.innTextarea.trim().split("\n")
+        
         this.listInn = listInn
         this.isRunning = true
         this.flData = []
+        this.isCancel = false
         this.start()
     }
 
     /**
+     * Отмена выполнения
+     */
+    public cancel() {
+        this.isCancel = true
+        this.queues.stop()
+    }
+
+    /**
      * Поочередное извлечение каждой ИНН и получение по ней данных
-     * @returns 
      */
     private start() {
-        const inn = this.listInn?.shift()
-        if (inn == null || inn.trim().length == 0) {
+        const inn = this.listInn.shift()
+        if (inn == null || inn.trim().length == 0 || this.isCancel) {
             this.stop()
             return
         }
@@ -64,11 +86,13 @@ export class FlComponent {
                 taxpayerData.isRun = true
                 this.flData.push(taxpayerData)
 
-                // если НП с таким ИНН не найден
+                // если НП с таким ИНН не найден,
+                // то завершаем текущий поиск и 
+                // передаем поиск для следующей записи
                 if (taxpayerData.data == null) {                          
                     taxpayerData.isRun = false
                     taxpayerData.result = `Налогоплательщик не найден!`
-                    this.start()                    
+                    this.start()
                     return
                 }
                 
@@ -77,7 +101,7 @@ export class FlComponent {
                 this.queues.add({ 
                     funcHttp: this.taxpayerService.getProfile(inn), 
                     funcSubscribe: (taxpayer: Taxpayer) => {
-                        taxpayerData.data.registrationType = taxpayer.registrationType                                                
+                        taxpayerData.data.registrationType = taxpayer.registrationType                                
                     }
                 })
 
@@ -90,7 +114,7 @@ export class FlComponent {
                 // Чеки НП
                 this.queues.add({
                     funcHttp: this.taxpayerService.getReceipts(taxpayer.fid),
-                    funcSubscribe: ((receipts: any) => taxpayer.receipts = receipts)
+                    funcSubscribe: ((receipts: any[]) => taxpayer.receipts = receipts.filter((item) => (new Date(item.approvalTime)).getFullYear() >= 2022))
                 })
 
                 // запуск 
@@ -107,33 +131,73 @@ export class FlComponent {
         
     }
 
+    /**
+     * Функция выполняемая при остановке заданий
+     */
     private stop() {
         this.isRunning = false                
     }
 
+    /**
+     * Выгрузка данных в Excel
+     */
     public exportToExcel() {        
-        this.excelService.exportToExcel(this.convertToExcel(), "nalog")
+        try{ 
+            this.isExporting = true
+            this.excelService.export(this.toExcel(), "Самозанятые")
+        }
+        catch(error: any) {
+            this.notifierService.notify('error', error)
+            throw error
+        }
+        finally {
+            this.isExporting = false
+        }
     }
 
+    /**
+     * Подготовка данных для выгрузки в Excel
+     * @returns {ExcelSheet[]}
+     */
+    private toExcel(): ExcelSheet[] {
+        let result: ExcelSheet[] = []
+        let sheetMainOptions: any = { 
+            '!cols': [ {wch: 13}, {wch: 30}, {wch: 9}, {wch: 16}, {wch: 16}, 
+                {wch: 17}, {wch: 17}, {wch: 22}, {wch: 15}, {wch: 20}, {wch: 7},
+                {wch: 7}, {wch: 7}, {wch: 12}, {wch: 16}, {wch: 11}, {wch: 12},
+            ],
+            '!autofilter': { ref: XLSX.utils.encode_range({ c: 0, r: 0}, { c: 16, r: 0 }) },
+        }
 
-    private convertToExcel(): any {
-        let result: any = {}
+        for(let i:number = 0; i < 17; i++) {
+            const cell = XLSX.utils.encode_cell({c: i, r: 0})
+            sheetMainOptions[cell] = {s: {
+                font: { bold: true, color: { rgb: 'FFFFFF' } }, 
+                fill: { fgColor: { rgb: '4F81BD' } }, 
+                alignment: { wrapText: true, vertical: 'center', horizontal: 'center' },
+                border: { 
+                    left: { style: 'thin', color: { rgb: '555555' } },
+                    right: { style: 'thin', color: { rgb: '555555' } },
+                    top: { style: 'thin', color: { rgb: '555555' } },
+                    bottom: { style: 'thin', color: { rgb: '555555' } },
+                },
+            }}
+        }
+
+        // создание главного листа в Excel
+        const excelSheet = new ExcelSheet('Главная', [], sheetMainOptions)
+        result.push(excelSheet)
 
         this.flData.forEach((item) => {
             if (item.data != null) {
                 
-                // наполнение главной страницы
-
-                if (result['Главная'] == null) {
-                    result['Главная'] = []
-                }
-
-                let main: any = {
+                // главная страница
+                let data: any = {
                     "ИНН": item.inn,
                     "ФИО": item.data.fio,
                     "Статус": item.data.status, 
-                    "Дата последней постановки на учет": new Date(item.data.tsunRegistrationDate), 
-                    "Дата последнего снятия с учета": new Date(item.data.tsunUnregisterDate), 
+                    "Дата последней постановки на учет": item.data.tsunRegistrationDate ? new Date(item.data.tsunRegistrationDate) : '', 
+                    "Дата последнего снятия с учета": item.data.tsunUnregisterDate ? new Date(item.data.tsunUnregisterDate) : '', 
                     "Тип последней постановки": item.data.registrationType, 
                     "Приложение последней постановки": item.data.registeredBy, 
                     "Текущий регион ведения деятельности": item.data.region, 
@@ -142,16 +206,18 @@ export class FlComponent {
                     "ИП": item.data.isIp ? "Да" : "Нет", 
                     "УСН": item.data.usnStatusExists ? "Да" : "Нет", 
                     "ЕСХН": item.data.eshnStatusExists ? "Да" : "Нет", 
-                    "Срок снятия с СНР": item.data.deadLine,
+                    "Срок снятия с СНР": item.data.deadLine ?? '',
+                    "Устройство": '',
+                    "IP-адрес регистрации": '',
+                    "Массовая постановка": '',
                 }
-                if (Array.isArray(item.data.regLogs) && item.data.regLogs.length > 0) {                    
+                if (Array.isArray(item.data.regLogs) && item.data.regLogs.length > 0) {
                     const regLog = item.data.regLogs.shift()
-                    main['Устройство'] = regLog.deviceId
-                    main['IP-адрес регистрации'] = regLog.ipAddress
-                    main['Массовая постановка'] = regLog.isMassReg ? 'Да' : 'Нет'
-                }                
-
-                result['Главная'].push(main)
+                    data['Устройство'] = regLog.deviceId
+                    data['IP-адрес регистрации'] = regLog.ipAddress
+                    data['Массовая постановка'] = regLog.isMassReg ? 'Да' : 'Нет'
+                }                                                
+                excelSheet.dataAdd(data)
 
                              
                 // чеки
@@ -159,38 +225,101 @@ export class FlComponent {
                     let receipts: any[] = []
                     item.data.receipts.forEach((receipt: any) => {
                         receipts.push({
-                            "Номер чека": receipt.receiptId,
-                            "Наименование товаров": receipt.servicesSerialized,
-                            "Сумма дохода": receipt.totalAmount,
-                            "Сумма налога": receipt.tax,
-                            "Налоговый вычет": receipt.usedTaxDeduction,
-                            "Статус чека": receipt.receiptType,
-                            "Время операции": new Date(receipt.approvalTime),
-                            "Тип клиента": receipt.incomeType,
-                            "ИНН клиента": receipt.clientInn,
-                            "Название ИП/ЮЛ клиента": receipt.clientDisplayName,
-                            "Партнер, зарегистрировавший чек": receipt.partnerName,
-                            "Код партнера": receipt.partnerCode,
-                            "Время отмены":  new Date(receipt.cancellationTime),
-                            "Причина отмены": receipt.cancellationComment,
-                            "Код устройства, с которого был отменен чек": receipt.cancellationSourceDeviceId,
-                            "Код устройства, с которого был зарегистрирован чек": receipt.sourceDeviceId,
-                            "Время регистрации дохода": new Date(receipt.requestTime),
-                            "Время регистрации чека в ПП НПД": new Date(receipt.registerTime),
-                            "Налоговый период": receipt.taxPeriodId,
-                            "Регион ведения деятельности в момент создания чека": receipt.region,
+                            "Номер чека": receipt.receiptId ?? '',
+                            "Наименование товаров": receipt.servicesSerialized ?? '',
+                            "Сумма дохода": receipt.totalAmount ?? '',
+                            "Сумма налога": receipt.tax ?? '',
+                            "Налоговый вычет": receipt.usedTaxDeduction ?? '',
+                            "Статус чека": receipt.receiptType ?? '',
+                            "Время операции": receipt.approvalTime ? new Date(receipt.approvalTime) : '',
+                            "Тип клиента": receipt.incomeType ?? '',
+                            "ИНН клиента": receipt.clientInn ?? '',
+                            "Название ИП/ЮЛ клиента": receipt.clientDisplayName ?? '',
+                            "Партнер, зарегистрировавший чек": receipt.partnerName ?? '',
+                            "Код партнера": receipt.partnerCode ?? '',
+                            "Время отмены":  receipt.cancellationTime ? new Date(receipt.cancellationTime) : '',
+                            "Причина отмены": receipt.cancellationComment ?? '',
+                            "Код устройства, с которого был отменен чек": receipt.cancellationSourceDeviceId ?? '',
+                            "Код устройства, с которого был зарегистрирован чек": receipt.sourceDeviceId ?? '',
+                            "Время регистрации дохода": receipt.requestTime ? new Date(receipt.requestTime) : '',
+                            "Время регистрации чека в ПП НПД": receipt.registerTime ? new Date(receipt.registerTime) : '',
+                            "Налоговый период": receipt.taxPeriodId ?? '',
+                            "Регион ведения деятельности в момент создания чека": receipt.region ?? '',
                         })
-                    });
-                    result[item.inn] = receipts
+                    })
+                    // добавление ссылки на вкладку
+                    sheetMainOptions['A' + (excelSheet.countRows()+1)] = { 
+                        l: { Target: `#${item.inn}!A1` }, 
+                        s: { font: { underline: true, color: { rgb: '0000FF' } } } }
+
+                    // стиль заголовка
+                    const styleHeaderReceipts: any = {}
+                    for(let i=0; i<20; i++) {
+                        const cell = XLSX.utils.encode_cell({c: i, r: 0})
+                        styleHeaderReceipts[cell] = {s: {
+                            font: { bold: true, color: { rgb: 'FFFFFF' } }, 
+                            fill: { fgColor: { rgb: '4F81BD' } }, 
+                            alignment: { wrapText: true, vertical: 'center', horizontal: 'center' },
+                            border: { 
+                                left: { style: 'thin', color: { rgb: '555555' } },
+                                right: { style: 'thin', color: { rgb: '555555' } },
+                                top: { style: 'thin', color: { rgb: '555555' } },
+                                bottom: { style: 'thin', color: { rgb: '555555' } },
+                            },
+                        }}
+                    }
+
+                    result.push(new ExcelSheet(item.inn, receipts, Object.assign(
+                        {
+                            '!cols': [{wch: 11}, {wch: 22}, {wch: 13}, {wch: 13}, {wch: 17}, {wch: 16}, {wch: 16}, {wch: 16}, 
+                                {wch: 12}, {wch: 30}, {wch: 24}, {wch: 13}, {wch: 13}, {wch: 11}, {wch: 18}, {wch: 17}, 
+                                {wch: 13}, {wch: 13}, {wch: 11}, {wch: 17}],
+                            '!autofilter': { ref: XLSX.utils.encode_range({ c: 0, r: 0}, { c: 19, r: 0 }) },
+                        },
+                        styleHeaderReceipts)
+                    ))
                 }
-               
+
             }
         })
-        
 
-        return result
+        return this.addBorderData(result)
     }
 
-
+    /**
+     * Добавление рамок к данным в Excel (исключая заголовки)
+     * @param {ExcelSheet[]} excelSheets 
+     * @returns {ExcelSheet[]}
+     */
+    private addBorderData(excelSheets: ExcelSheet[]): ExcelSheet[] {
+        excelSheets.forEach((sheet) => {
+            const rows = sheet.getData().length
+            const options = sheet.getOptions()
+            if (rows >= 1) {
+                const cols = Object.keys(sheet.getData()[0]).length
+                for(let row=1; row<=(rows+1); row++) {
+                    for(let col=0; col<cols; col++) {
+                        const cell = XLSX.utils.encode_cell({c: col, r: row})
+                        const s: any = {}
+                        s[cell]= { s: {
+                            border: { 
+                                left: { style: 'thin', color: { rgb: '555555' } },
+                                right: { style: 'thin', color: { rgb: '555555' } },
+                                top: { style: 'thin', color: { rgb: '555555' } },
+                                bottom: { style: 'thin', color: { rgb: '555555' } },
+                            },
+                        }}
+                        if (options[cell] != null && options[cell]['s'] != null) {
+                            options[cell]['s'] = Object.assign(s[cell]['s'], options[cell]['s'])
+                        }
+                        else {
+                            options[cell] = s[cell]
+                        }
+                    }
+                }
+            }
+        })
+        return excelSheets
+    }
 
 }

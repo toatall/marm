@@ -1,28 +1,50 @@
 <div id="app">
     <nav class="navbar navbar-expand navbar-dark bg-dark border-b">        
         <div class="container-fluid">
-            <a routerLink="home" class="navbar-brand">
-                ¯\_(ツ)_/¯
+            <a routerLink="home" class="navbar-brand fw-bold" style="width: 15rem;">
+                <img src="/assets/logo.png" style="width: 46px; height: 46px;" />
+                НПД
             </a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item" *ngIf="isLoggedIn">
-                        <a class="nav-link" routerLink="home" routerLinkActive="active">Главная</a>
+                        <a class="nav-link" routerLink="home" routerLinkActive="active">
+                            <fa-icon [icon]="['fas', 'home']"></fa-icon>
+                            Главная
+                        </a>
                     </li>          
                     <li class="nav-item" *ngIf="isLoggedIn">
-                        <a class="nav-link" routerLink="fl" routerLinkActive="active">По самозанятым</a>
+                        <a class="nav-link" routerLink="fl" routerLinkActive="active">
+                            <fa-icon [icon]="['fas', 'user-tie']"></fa-icon>
+                            По самозанятым
+                        </a>
+                    </li>
+                    <li class="nav-item" *ngIf="isLoggedIn">
+                        <a class="nav-link" routerLink="ul" routerLinkActive="active">
+                            <fa-icon [icon]="['fas', 'city']"></fa-icon>
+                            По юридическим лицам
+                        </a>
                     </li>
                 </ul>
 
                 <ul class="navbar-nav ml-auto">           
                     <li class="nav-item" *ngIf="!isLoggedIn">
-                        <a href="/login" class="nav-link" routerLink="login">Вход</a>
+                        <a class="nav-link" routerLink="login" routerLinkActive="active">
+                            <fa-icon [icon]="['fas', 'sign-in-alt']"></fa-icon>
+                            Вход
+                        </a>
                     </li>              
                     <li class="nav-item" *ngIf="isLoggedIn">
-                        <a href="/profile" class="nav-link" routerLink="profile">{{ username }}</a>
+                        <a class="nav-link" routerLink="profile" routerLinkActive="active">
+                            <fa-icon [icon]="['fas', 'user']"></fa-icon>
+                            {{ username }}
+                        </a>
                     </li>
                     <li class="nav-item" *ngIf="isLoggedIn">
-                        <a href class="nav-link" (click)="logout()">Выход</a>
+                        <a href class="nav-link" (click)="logout()">
+                            <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
+                            Выход
+                        </a>
                     </li>
                 </ul>
             </div>
