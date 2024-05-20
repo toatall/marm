@@ -72,4 +72,13 @@ export class AuthService {
         window.location.reload();
     }    
 
+
+    /**
+     * Профиль текущего пользователя
+     * @returns {Observable<any>} 
+     */
+    public userProfile(): Observable<any> {
+        return this.http.get(environment.urlUserProfile());
+    }
+
 }

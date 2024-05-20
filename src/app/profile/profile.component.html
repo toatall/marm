@@ -1,11 +1,32 @@
-<div class="container" *ngIf="currentUser; else loggedOut">
+<div class="container" *ngIf="profile; else loggedOut">
     
     <header class="jumbotron">
-        <h3>
-            Учетная запись: <strong>{{ currentUser.username }}</strong>
-        </h3>    
-    </header>   
+        <h3>Профиль: {{ profile?.cn }}</h3>
+    </header>  
 
+    <table class="table table-bordered table-striped-columns mt-4">
+        <tbody>
+            <tr>
+                <th>Учетная запись</th>
+                <td>{{ profile?.cn }}</td>
+            </tr>
+            <tr>
+                <th>ФИО</th>
+                <td>{{ profile?.displayName }}</td>
+            </tr>
+            <tr>
+                <th>Режим</th>
+                <td>{{ profile?.mode }}</td>
+            </tr>
+            <tr>
+                <th>Разрешения</th>
+                <td>
+                    {{ permissions }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
 </div>
 
 <ng-template #loggedOut>

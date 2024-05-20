@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { StorageService } from '../_services/storage.service';
+import { AuthService } from '../_services/auth.service';
 
 @Component({
     selector: 'app-profile',
@@ -7,11 +7,21 @@ import { StorageService } from '../_services/storage.service';
     styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
-    currentUser: any;
+    
+    public profile: any;
+    public permissions: any;
 
-    constructor(private storageService: StorageService) { }
+    constructor(
+        private authService: AuthService,
+    ) { }
 
-    ngOnInit(): void {
-        this.currentUser = this.storageService.getUser();
+    ngOnInit(): void {        
+        this.authService.userProfile().subscribe((profile: any) => {
+            this.profile = profile;
+            if (Array.isArray(profile.permissions)) {
+                const permissions: Array<string> = profile.permissions.map((item: any) => `${item.subject} (${item.actions})`);
+                this.permissions = permissions.join(', ');
+            }
+        });
     }
 }

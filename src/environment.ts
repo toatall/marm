@@ -6,7 +6,9 @@ export const environment = {
     // аутентификация
     urlLogin: function() { return `${this.baseUrl}/v1/auth/pwd` },
     urlTokenRefresh: function() { return `${this.baseUrl}/v1/auth/token` },
-    
+
+    // профиль пользователя
+    urlUserProfile() { return `${this.baseUrl}/v1/user` },    
 
     
     // список финансовых профилей
