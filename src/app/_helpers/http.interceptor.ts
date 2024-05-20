@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HTTP_INTERCEPTORS, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, EMPTY } from 'rxjs';
-import { catchError, finalize, map, switchMap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { NotifierService } from 'angular-notifier';
 import { StorageService } from '../_services/storage.service';
 import { AuthService } from '../_services/auth.service';
@@ -33,7 +33,8 @@ export class HttpRequestInterceptor implements HttpInterceptor {
                 if (error instanceof HttpErrorResponse && !req.url.includes('login') && error.status == 401) {                    
                     this.notifierService.notify('error', 'Токен пользователя просрочен!')
                     this.authService.tokenRefresh(req)                   
-                    return next.handle(req)
+                    //return EMPTY;// next.handle(req) 
+                    return throwError(() => error);                   
                 }
 
                 this.notifierService.notify('error', error.message);

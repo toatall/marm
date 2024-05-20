@@ -6,18 +6,24 @@
                 <a routerLink="/home">Главная</a>
             </li>
             <li class="breadcrumb-item">
-                По самозанятым
+                По юридическим лицам и индивидуальным предпринимателям
             </li>
         </ol>
     </nav>
 
-    <div class="row">
-        
+    <div class="row">        
         <div class="col-3">
-            <form (ngSubmit)="onSubmit()">
+            <form (ngSubmit)="onSubmit()">               
                 <div class="card">
-                    <div class="card-header">
-                        <h4>Список ИНН</h4>
+                    <div class="card-header text-center">
+                        <h4>Месяц отчета</h4>
+                    </div>
+                    <div class="card-body">
+                        <input type="month" class="form-control" name="month" [(ngModel)]="monthInput" [disabled]="isRunning" />
+                    </div>
+
+                    <div class="card-header border-top text-center">
+                        <h4>Список c ИНН ЮЛ/ИП</h4>
                         <span class="text-secondary">(каждый ИНН должен быть с новой строки)</span>
                     </div>
                     <div class="card-body">
@@ -37,16 +43,16 @@
         </div>
 
         <div class="col">
-            <button *ngIf="!isRunning && taxPayerFlDataList.length > 0" [disabled]="isExporting" (click)="exportToExcel()" class="btn btn-primary mb-2">
+            <button *ngIf="!isRunning && taxPayerUlDataList.length > 0" [disabled]="isExporting" (click)="exportToExcel()" class="btn btn-primary mb-2">
                 <span class="spinner-border spinner-border-sm" *ngIf="isExporting"></span>
                 Выгрузить в Excel
             </button>
 
             <div class="progress w-100 mb-2" style="height: .5rem;" *ngIf="isRunning">
-                <div class="progress-bar progress-bar-animated" [style.width]="((taxPayerFlDataList.length / listInn.length) * 100) + '%'"></div>
+                <div class="progress-bar progress-bar-animated" [style.width]="((taxPayerUlDataList.length / listInn.length) * 100) + '%'"></div>
             </div>
             
-            <table class="table table-bordered">
+            <table class="table table-bordered table-stripped">
                 <thead>
                     <tr>
                         <th>ИНН</th>
@@ -54,9 +60,9 @@
                         <th>Описание</th>
                     </tr>
                 </thead>
-                <tbody>                    
-                    <tr *ngFor="let payer of taxPayerFlDataList">
-                        <td>{{ payer.inn }}</td>                        
+                <tbody>
+                    <tr *ngFor="let payer of taxPayerUlDataList">
+                        <td>{{ payer.inn }}</td>
                         <td>
                             <span class="badge bg-warning fs-6" *ngIf="payer.isRun">
                                 <span class="spinner-border spinner-border-sm"></span>
@@ -66,12 +72,13 @@
                                 Завершено
                             </span>
                         </td>
-                        <td>                        
+                        <td>
                             <div *ngIf="payer.isRun" class="mb-2">
                                 <kbd>{{ payer.currentState }}</kbd>
                             </div>
                             <ul class="list-unstyled">
-                                <li *ngIf="payer?.detail?.receipts && payer.detail.receipts.length > 0">Записей с вкладки "Чеки": <b>{{ payer.detail.receipts.length }}</b></li>
+                                <li *ngIf="payer.basicList.length > 0">Записей с вкладки "Основные показатели": <b>{{ payer.basicList.length }}</b></li>
+                                <li *ngIf="payer.smzList.length > 0">Записей с вкладки "Реестр самозанятых": <b>{{ payer.smzList.length }}</b></li>
                             </ul>
                             <p *ngIf="!payer.detail">Налогоплательщик не найден!</p>
                         </td>
