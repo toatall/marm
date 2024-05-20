@@ -119,7 +119,15 @@ export class FlComponent {
                 // Журнал регистраций НП
                 this.queues.add({
                     funcHttp: this.taxpayerService.getRegLog(taxPayerFl.fid),
-                    funcSubscribe: ((regLogs: any) => taxPayerFl.regLogs = regLogs),
+                    funcSubscribe: ((regLogs: any) => {
+                        if (Array.isArray(regLogs) && regLogs.length > 0) {
+                            // информация с вкладки "Журнал регистраций"
+                            const regLog: any = regLogs.shift()
+                            taxPayerFlData.detail.deviceId = regLog['deviceId'];
+                            taxPayerFlData.detail.ipAddress = regLog['ipAddress'];
+                            taxPayerFlData.detail.isMassReg = regLog['isMassReg'] ?  'Да' : 'Нет';
+                        }
+                    }),
                     description: `Получение журнала регистраций по самозанятому с ИНН ${taxPayerFl.inn}`,
                 })
 
@@ -156,7 +164,8 @@ export class FlComponent {
      * Функция выполняемая при остановке заданий
      */
     private stop() {
-        this.isRunning = false;        
+        this.isRunning = false;     
+        console.log(this.taxPayerFlDataList)   
     }
 
     /**

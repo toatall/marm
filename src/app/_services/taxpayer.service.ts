@@ -46,7 +46,7 @@ export class TaxpayerService {
             filtered: [],
             page: 0,
             pageSize: 99999,
-            sorted: [],
+            sorted: [{id: "orderCreationDate", desc: true}],
         })
         .pipe(map(data => data.rows))
     }

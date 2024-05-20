@@ -73,8 +73,7 @@ export class ExportExcel {
         optionsFl[cellFl] = {
             l: { Target: `#${taxPayerFlData.inn}!A1` }, 
             s: { font: { underline: true, color: { rgb: '0000FF' } } }, 
-        };
-        console.log(cellFl);
+        };       
         this.sheetMain.setOptions(optionsFl);
 
         // Чеки

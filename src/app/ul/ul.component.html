@@ -51,13 +51,14 @@
             <div class="progress w-100 mb-2" style="height: .5rem;" *ngIf="isRunning">
                 <div class="progress-bar progress-bar-animated" [style.width]="((taxPayerUlDataList.length / listInn.length) * 100) + '%'"></div>
             </div>
-            
+                        
             <table class="table table-bordered table-stripped">
                 <thead>
                     <tr>
                         <th>ИНН</th>
                         <th>Статус</th>
                         <th>Описание</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,6 +82,11 @@
                                 <li *ngIf="payer.smzList.length > 0">Записей с вкладки "Реестр самозанятых": <b>{{ payer.smzList.length }}</b></li>
                             </ul>
                             <p *ngIf="!payer.detail">Налогоплательщик не найден!</p>
+                        </td>
+                        <td>
+                            <button *ngIf="!payer.isRun" class="btn btn-success btn-sm" (click)="exportOneToExcel(payer)">
+                                <fa-icon [icon]="['fas', 'file-excel']"></fa-icon>
+                            </button>
                         </td>
                     </tr>
                 </tbody>

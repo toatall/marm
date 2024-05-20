@@ -169,7 +169,15 @@ export class UlComponent {
                                     // Журнал регистраций НП (самозанятого)
                                     this.queues.add({
                                         funcHttp: this.taxpayerService.getRegLog(taxPayerFl.fid),
-                                        funcSubscribe: ((regLogs: any) => taxPayerFl.regLogs = regLogs),
+                                        funcSubscribe: ((regLogs: any) => {
+                                            if (Array.isArray(regLogs) && regLogs.length > 0) {
+                                                // информация с вкладки "Журнал регистраций"
+                                                const regLog: any = regLogs.shift()
+                                                taxPayerFl.deviceId = regLog['deviceId'];
+                                                taxPayerFl.ipAddress = regLog['ipAddress'];
+                                                taxPayerFl.isMassReg = regLog['isMassReg'] ?  'Да' : 'Нет';
+                                            }
+                                        }),
                                         description: `Получение журнала регистраций по самозанятому с ИНН ${taxPayerUlSmz.inn}`,
                                     });
 
@@ -228,7 +236,14 @@ export class UlComponent {
      * Выгрузка данных в Excel
      */
     public exportToExcel() {    
-        const exportExcel = new ExportExcel(this.taxPayerUlDataList, this.excelService)
-        exportExcel.export()
+        const exportExcel = new ExportExcel(this.taxPayerUlDataList, this.excelService);
+        exportExcel.export();
     }
+
+
+    public exportOneToExcel(taxPayer: TaxPayerUlData) {
+        const exportExcel = new ExportExcel([taxPayer], this.excelService);
+        exportExcel.export();
+    }
+
 }
