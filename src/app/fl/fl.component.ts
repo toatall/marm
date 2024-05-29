@@ -85,7 +85,7 @@ export class FlComponent {
             .subscribe((taxPayerFl: TaxPayerFl) => {
                                        
                 taxPayerFlData.setDetail(taxPayerFl);
-                this.taxPayerFlDataList.push(taxPayerFlData);
+                this.taxPayerFlDataList.push(taxPayerFlData);                
 
                 // если НП с таким ИНН не найден,
                 // то завершаем текущий поиск и 
@@ -101,7 +101,8 @@ export class FlComponent {
                 this.queues.add({ 
                     funcHttp: this.taxpayerService.getProfile(inn), 
                     funcSubscribe: (data: any) => {
-                        taxPayerFlData.detail.registrationType = data.registrationType                                
+                        taxPayerFlData.detail.registrationType = data.registrationType;
+                        taxPayerFlData.detail.email = data.email;
                     },
                     description: `Получение данных о самозанятом с ИНН ${taxPayerFl.inn}`,
                 })
@@ -110,8 +111,8 @@ export class FlComponent {
                 this.queues.add({
                     funcHttp: this.taxpayerService.getKrsb(taxPayerFl.fid),
                     funcSubscribe: (data: any) => {
-                        taxPayerFl.debt = data.debt;
-                        taxPayerFl.updatedAt = data.updatedAt;
+                        taxPayerFl.debt = data?.debt;
+                        taxPayerFl.updatedAt = data?.updatedAt;
                     },
                     description: `Получение информации о задолженности по самозанятому с ИНН ${taxPayerFl.inn}`,
                 });
@@ -164,8 +165,7 @@ export class FlComponent {
      * Функция выполняемая при остановке заданий
      */
     private stop() {
-        this.isRunning = false;     
-        console.log(this.taxPayerFlDataList)   
+        this.isRunning = false;
     }
 
     /**

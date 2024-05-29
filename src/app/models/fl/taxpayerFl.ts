@@ -81,6 +81,7 @@ export class TaxPayerFlHelper extends ExcelData {
             new ExcelColumn("inn", "ИНН", 13),
             new ExcelColumn("fio", "ФИО", 35),
             new ExcelColumn("status", "Статус", 8),
+            new ExcelColumn("email", "Email", 10),
             new ExcelColumn("tsunRegistrationDate", "Дата последней постановки на учет", 11),
             new ExcelColumn("tsunUnregisterDate", "Дата последнего снятия с учета", 11),
             new ExcelColumn("registrationType", "Тип последней постановки", 11),

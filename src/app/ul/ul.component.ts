@@ -152,6 +152,7 @@ export class UlComponent {
                                         funcHttp: this.taxpayerService.getProfile(taxPayerUlSmz.inn), 
                                         funcSubscribe: (data: any) => {                                            
                                             taxPayerFl.registrationType = data.registrationType;
+                                            taxPayerFl.email = data.email;
                                         },
                                         description: `Получение данных по самозанятому с ИНН ${taxPayerUlSmz.inn}`,
                                     });
